@@ -13929,7 +13929,6 @@ static void ggml_rope_cache_init(
             theta/ff, freq_scale, corr_dims, i0, ext_factor, mscale, &cache[i0 + 0], &cache[i0 + 1]
         );
         cache[i0 + 1] *= sin_sign;
-
         theta *= theta_scale;
     }
 }
@@ -13942,6 +13941,13 @@ GGML_CALL void ggml_rope_yarn_corr_dims(
     float end   =  ceilf(ggml_rope_yarn_corr_dim(n_dims, n_ctx_orig, beta_slow, freq_base));
     dims[0] = MAX(0, start);
     dims[1] = MIN(n_dims - 1, end);
+}
+
+const float t0(const float x0, const float x1, const float sin_theta, const float cos_theta){
+    return x0*cos_theta - x1*sin_theta;
+}
+const float t1(const float x0, const float x1, const float sin_theta, const float cos_theta){
+    return x0*sin_theta + x1*cos_theta;
 }
 
 static void ggml_compute_forward_rope_f32(
@@ -14036,8 +14042,8 @@ static void ggml_compute_forward_rope_f32(
                         const float x0 = src[0];
                         const float x1 = src[1];
 
-                        dst_data[0] = x0*cos_theta - x1*sin_theta;
-                        dst_data[1] = x0*sin_theta + x1*cos_theta;
+                        dst_data[0] = t0(x0,  x1, sin_theta, cos_theta);//x0*cos_theta - x1*sin_theta;
+                        dst_data[1] = t1(x0,  x1, sin_theta, cos_theta);//x0*sin_theta + x1*cos_theta;
                     }
                 } else {
                     for (int64_t i0 = 0; i0 < n_dims; i0 += 2) {
@@ -14052,8 +14058,8 @@ static void ggml_compute_forward_rope_f32(
                         const float x0 = src[0];
                         const float x1 = src[n_dims/2];
 
-                        dst_data[0]        = x0*cos_theta - x1*sin_theta;
-                        dst_data[n_dims/2] = x0*sin_theta + x1*cos_theta;
+                        dst_data[0]        =t0(x0,  x1, sin_theta, cos_theta); //x0*cos_theta - x1*sin_theta;
+                        dst_data[n_dims/2] =t1(x0,  x1, sin_theta, cos_theta); //x0*sin_theta + x1*cos_theta;
                     }
                 }
 
@@ -16624,8 +16630,6 @@ static void ggml_compute_forward_cross_entropy_loss_back(
             } break;
     }
 }
-
-/////////////////////////////////
 
 static void ggml_compute_forward(struct ggml_compute_params * params, struct ggml_tensor * tensor) {
     GGML_ASSERT(params);

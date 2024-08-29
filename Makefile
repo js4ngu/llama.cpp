@@ -58,6 +58,7 @@ TEST_TARGETS = \
 	tests/test-quantize-fns \
 	tests/test-quantize-perf \
 	tests/test-rope \
+	tests/profile-rope \
 	tests/test-sampling \
 	tests/test-tokenizer-0 \
 	tests/test-tokenizer-1-bpe \
@@ -1346,6 +1347,11 @@ llama-gbnf-validator: examples/gbnf-validator/gbnf-validator.cpp \
 	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
 	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
 
+llama-rope: examples/gbnf-validator/gbnf-validator.cpp \
+	$(OBJ_ALL)
+	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
+	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
+
 ifdef GGML_RPC
 rpc-server: examples/rpc/rpc-server.cpp \
 	$(OBJ_GGML)
@@ -1503,6 +1509,11 @@ tests/test-tokenizer-1-spm: tests/test-tokenizer-1-spm.cpp \
 	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
 
 tests/test-rope: tests/test-rope.cpp ggml/src/ggml.o \
+	$(OBJ_GGML)
+	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
+	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
+
+tests/profile-rope: tests/profile-rope.cpp ggml/src/ggml.o \
 	$(OBJ_GGML)
 	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
 	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
