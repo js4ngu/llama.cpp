@@ -37,9 +37,19 @@ def preprocess_text(text, window_size=1024, stride=512):
     ]
     return windows
 
+def save_result(file_path, chunk_idx, perplexity):
+    """결과를 파일에 저장."""
+    with open(file_path, "a") as f:
+        f.write(f"Chunk {chunk_idx}: PPL = {perplexity}\n")
+
 def main():
     # 모델 파일 경로
     model_path = "./Meta-Llama-3-8B-Instruct-Q4_K_M.gguf"
+    result_file = "perplexity_results.txt"
+
+    # 결과 파일 초기화
+    if os.path.exists(result_file):
+        os.remove(result_file)
 
     # WikiText-2 데이터셋 로드
     print("Loading dataset...")
@@ -68,6 +78,7 @@ def main():
         perplexity = calculate_perplexity(model_path, chunk)
         if perplexity is not None:
             perplexities.append(perplexity)
+            save_result(result_file, idx + 1, perplexity)  # 결과 저장
         else:
             print(f"Skipping chunk {idx + 1} due to calculation failure.")
 
@@ -75,6 +86,7 @@ def main():
     if perplexities:
         avg_perplexity = sum(perplexities) / len(perplexities)
         print(f"Average Perplexity: {avg_perplexity}")
+        save_result(result_file, "Average", avg_perplexity)  # 평균 결과 저장
     else:
         print("No perplexities were calculated successfully.")
 
